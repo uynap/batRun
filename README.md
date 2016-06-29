@@ -72,6 +72,6 @@ Overview
 License
 ------------
 
-This project is licensed under the MIT License.
+This project is licensed under the Apache License 2.0.
 
 License can be found [here](LICENSE).
