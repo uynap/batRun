@@ -56,7 +56,7 @@
 // A task may contains multiple works. For each of the work, you can specify a number of workers, which are goroutines.
 // A common use case is you got a group of tasks. Each of the tasks contains a number of blocking assignments. Then you can put these blocking assignments in multiple works.
 
-package batRun2
+package batRun
 
 import (
 	"golang.org/x/net/context"
