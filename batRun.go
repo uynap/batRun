@@ -67,7 +67,7 @@ import (
 const (
 	contextData = iota
 	contextTimeout
-    contextError
+	contextError
 )
 
 // Task is for "producer" to create contexts
@@ -88,7 +88,7 @@ type Report struct {
 	Start time.Time
 	End   time.Time
 	// The result for all task.
-    Result map[int]int
+	Result map[int]int
 }
 
 // Bat is a single assignment, consisting producer(s) and work(s).
@@ -103,7 +103,7 @@ type Producer func(*Task)
 // Worker is a function that can consume tasks from producer(s).
 type Worker func(*Context) error
 
-// Workers is a certain number of workers, consisting a worker and a number. 
+// Workers is a certain number of workers, consisting a worker and a number.
 type Workers struct {
 	Worker Worker
 	Num    int
@@ -111,8 +111,8 @@ type Workers struct {
 
 // Error contains 2 parts information. One is the error message if there is an error during in all workers. Another one is indicating in which stage it happened.
 type Error struct {
-    Error error
-    Count int
+	Error error
+	Count int
 }
 
 // NewBat returns an empty Bat struct.
@@ -141,26 +141,24 @@ func (bat *Bat) Run() map[int]int {
 
 	taskQueue := bat.runProducers(ctx)
 	resultQueue := bat.runWorks(ctx, taskQueue)
-    report := bat.runReporter(ctx, resultQueue)
+	report := bat.runReporter(ctx, resultQueue)
 
 	return report
 }
 
 func (bat *Bat) runReporter(ctx context.Context, in <-chan context.Context) map[int]int {
-    report := make(map[int]int)
+	report := make(map[int]int)
 	for c := range in {
-        report[-1] += 1
-        if err, ok := c.Value(contextError).(*Error); ok && err != nil {
-            stage := len(bat.Works) - err.Count
-            println("job failed at stage", stage, "with error:", err.Error)
-            report[stage] += 1
-        }else{
-            data := c.Value(contextData).(map[string]int)
-            println("age:", data["age"])
-            println("money:", data["money"])
-        }
+		report[-1] += 1
+		if err, ok := c.Value(contextError).(*Error); ok && err != nil {
+			stage := len(bat.Works) - err.Count
+			println("job failed at stage", stage, "with error:", err.Error)
+			report[stage] += 1
+		} else {
+			//			data := c.Value(contextData).(map[string]int)
+		}
 	}
-    return report
+	return report
 }
 
 func (bat *Bat) runWorks(ctx context.Context, in <-chan context.Context) <-chan context.Context {
@@ -183,25 +181,36 @@ func (bat *Bat) runWorkers(ctx context.Context, workers Workers, upstream <-chan
 func (bat *Bat) runWorker(ctx context.Context, worker Worker, upstream <-chan context.Context) <-chan context.Context {
 	out := make(chan context.Context, 5)
 	go func() {
-        defer close(out)
-        for c := range upstream {
-            if err, ok := c.Value(contextError).(*Error); ok && err != nil {
-                err.Count += 1
-                c = context.WithValue(c, contextError, err)
-            }else{
-                _ctx := &Context{c, nil}
-                err := worker(_ctx)
-                if err != nil {
-                    _err := &Error{err, 0}
-                    c = context.WithValue(_ctx.ctx, contextError, _err)
-                }
-            }
-            select {
-            case out <- c:
-            case <-ctx.Done():
-                return
-            }
-        }
+		defer close(out)
+		for c := range upstream {
+			if err, ok := c.Value(contextError).(*Error); ok && err != nil {
+				err.Count += 1
+				c = context.WithValue(c, contextError, err)
+			} else {
+				if timeout, ok := c.Value(contextTimeout).(time.Duration); ok {
+					c, _ = context.WithTimeout(c, timeout)
+					c = context.WithValue(c, contextTimeout, 0)
+				}
+				_ctx := &Context{c, nil}
+				_c := make(chan error, 1)
+				go func() { _c <- worker(_ctx) }()
+				select {
+				case <-c.Done():
+					//println("timeout!!!")
+					return
+				case err := <-_c:
+					if err != nil {
+						_err := &Error{err, 0}
+						c = context.WithValue(_ctx.ctx, contextError, _err)
+					}
+				}
+			}
+			select {
+			case out <- c:
+			case <-ctx.Done():
+				return
+			}
+		}
 	}()
 	return out
 }
@@ -283,4 +292,3 @@ func merge(ctx context.Context, cs []<-chan context.Context) <-chan context.Cont
 	}()
 	return out
 }
-
