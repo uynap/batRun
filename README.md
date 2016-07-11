@@ -8,6 +8,7 @@
 batRun is a Multitask framework using Producer Consumer pattern to run multiple works in different goroutines. The detail documentation can be found at [GoDoc](http://godoc.org/github.com/uynap/batRun).
 
 ## Overview
+```
 +--------------+    +---------------------+    +---------------------+
 |  Producer A  |    |        | Worker 1-1 |    |        | Worker 2-1 |
 +--------------+    |        | Worker 1-2 |    |        | Worker 2-2 |                 +----------+
@@ -15,6 +16,7 @@ batRun is a Multitask framework using Producer Consumer pattern to run multiple 
 +--------------+    |        | ...        |    |        | ...        |                 +----------+
 |  Producer Z  |    |        | Worker 1-n |    |        | Worker 2-n |
 +--------------+    +---------------------+    +---------------------+
+```
 
 
 ## Terms
@@ -27,12 +29,12 @@ batRun is a Multitask framework using Producer Consumer pattern to run multiple 
 **Support Multiple-producer and Multiple-work chain**
 As the graph shows above, batRun supports multiple producers to generate task.
 
-**Multiple workers for each work
+**Multiple workers for each work**
 You can set the quantity of workers for each work.
 
-**Support timeout for each task
+**Support timeout for each task**
 
-**Support cancellation fuction for each worker
+**Support cancellation fuction for each worker**
 
 ## Usage
 
@@ -118,12 +120,18 @@ bat.AddWork(func(ctx *batRun.Context) error {
 }, 5)
 ```
 When a task is cancelled, a cancel function can be called to rollback.
+
 For example, for an account creating task, there may be 3 works. 
+
 The first work is "create a system directory" with a cancel function of "delete the directory". 
+
 The second one is "create a group for the user" with a cancel function of "delete the group".
+
 The third one is "create the user account" with a cancel function of "delete the account". 
+
 If the task is timeout or issue found during the third work, 
 all the cancel functions will be called in FIFO sequence.
+
 Please refer to the [test case](batRun_test.go) for a real example.
 
 License
