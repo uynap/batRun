@@ -120,15 +120,15 @@ bat.AddWork(func(ctx *batRun.Context) error {
 ```
 When a task is cancelled, a cancel function can be called to rollback.
 
-For example, for an account creating task, there may be 3 works. 
+For example, for an account creating task, there are 3 works. 
 
-The first work is "create a system directory" with a cancel function of "delete the directory". 
+Work 1 is "create a system directory" with a cancel function of "delete the directory". 
 
-The second one is "create a group for the user" with a cancel function of "delete the group".
+Work 2 is "create a group for the user" with a cancel function of "delete the group".
 
-The third one is "create the user account" with a cancel function of "delete the account". 
+Work 3 is "create the user account" with a cancel function of "delete the account". 
 
-If the task is timeout or issue found during the third work, 
+If the task is timeout or issue found during the Work 3, 
 all the cancel functions will be called in FIFO sequence.
 
 Please refer to the [test case](batRun_test.go) for a real example.
