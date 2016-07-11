@@ -35,7 +35,7 @@ func TestBatRunWithoutTimeout(t *testing.T) {
 
 	bat.AddWork(func(ctx *batRun.Context) error {
 		data := ctx.GetContext().(map[string]int)
-		data["money"] = 600
+		data["height"] = 182
 		ctx.SetContext(data)
 		return nil
 	}, 4)
@@ -74,11 +74,59 @@ func TestBatRunWithTimeout(t *testing.T) {
 
 	bat.AddWork(func(ctx *batRun.Context) error {
 		data := ctx.GetContext().(map[string]int)
-		data["money"] = 600
+		data["height"] = 182
 		ctx.SetContext(data)
 		time.Sleep(3 * time.Second)
 		return nil
 	}, 4)
+
+	bat.Run()
+}
+
+func TestBatRunWithTimeoutCancel(t *testing.T) {
+	bat := batRun.NewBat()
+	bat.AddProducers(func(task *batRun.Task) {
+		for i := 1; i <= 2; i++ {
+			data := map[string]int{
+				"id": i,
+			}
+			ctx := task.NewContext(data)
+			task.Submit(ctx, 3*time.Second) // create a task with timeout in 3s
+		}
+	})
+
+	bat.AddWork(func(ctx *batRun.Context) error {
+		ctx.Cancel = func() {
+			println("Cancel is called from work 1")
+		}
+		data := ctx.GetContext().(map[string]int)
+		data["age"] = 22
+		ctx.SetContext(data)
+		time.Sleep(1 * time.Second)
+		return nil
+	}, 5)
+
+	bat.AddWork(func(ctx *batRun.Context) error {
+		ctx.Cancel = func() {
+			println("Cancel is called from work 2")
+		}
+		data := ctx.GetContext().(map[string]int)
+		data["size"] = 40
+		ctx.SetContext(data)
+		time.Sleep(5 * time.Second)
+		return nil
+	}, 5)
+
+	bat.AddWork(func(ctx *batRun.Context) error {
+		ctx.Cancel = func() {
+			println("Cancel is called from work 3")
+		}
+		data := ctx.GetContext().(map[string]int)
+		data["height"] = 182
+		ctx.SetContext(data)
+		time.Sleep(3 * time.Second)
+		return nil
+	}, 5)
 
 	bat.Run()
 }

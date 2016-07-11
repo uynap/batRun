@@ -68,6 +68,7 @@ const (
 	contextData = iota
 	contextTimeout
 	contextError
+	contextCancel
 )
 
 // Task is for "producer" to create contexts
@@ -146,6 +147,7 @@ func (bat *Bat) Run() map[int]int {
 	return report
 }
 
+// TODO
 func (bat *Bat) runReporter(ctx context.Context, in <-chan context.Context) map[int]int {
 	report := make(map[int]int)
 	for c := range in {
@@ -155,7 +157,7 @@ func (bat *Bat) runReporter(ctx context.Context, in <-chan context.Context) map[
 			println("job failed at stage", stage, "with error:", err.Error)
 			report[stage] += 1
 		} else {
-			//			data := c.Value(contextData).(map[string]int)
+			// TODO	data := c.Value(contextData).(map[string]int)
 		}
 	}
 	return report
@@ -191,20 +193,42 @@ func (bat *Bat) runWorker(ctx context.Context, worker Worker, upstream <-chan co
 					c, _ = context.WithTimeout(c, timeout)
 					c = context.WithValue(c, contextTimeout, 0)
 				}
+
 				_ctx := &Context{c, nil}
 				_c := make(chan error, 1)
 				go func() { _c <- worker(_ctx) }()
+
 				select {
 				case <-c.Done():
-					//println("timeout!!!")
+					// Call previous cancel functions if any
+					if cancels, ok := c.Value(contextCancel).([]func()); ok {
+						if len(cancels) != 0 {
+							for _, cancel := range cancels {
+								cancel()
+							}
+						}
+					}
+
+					// Call current cancel function
+					if _ctx.Cancel != nil {
+						_ctx.Cancel()
+					}
+
 					return
 				case err := <-_c:
 					if err != nil {
 						_err := &Error{err, 0}
 						c = context.WithValue(_ctx.ctx, contextError, _err)
 					}
+
+					if _ctx.Cancel != nil {
+						cancels, _ := c.Value(contextCancel).([]func())
+						cancels = append(cancels, _ctx.Cancel)
+						c = context.WithValue(_ctx.ctx, contextCancel, cancels)
+					}
 				}
 			}
+
 			select {
 			case out <- c:
 			case <-ctx.Done():
@@ -284,8 +308,7 @@ func merge(ctx context.Context, cs []<-chan context.Context) <-chan context.Cont
 		go output(c)
 	}
 
-	// Start a goroutine to close out once all the output goroutines are
-	// done.  This must start after the wg.Add call.
+	// Start a goroutine to close out once all the output goroutines are done.
 	go func() {
 		wg.Wait()
 		close(out)
