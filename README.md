@@ -4,6 +4,7 @@
 [Build]: https://travis-ci.org/uynap/batRun
 [GoDoc]: https://img.shields.io/badge/documentation-reference-5272B4.svg
 [Documentation]: http://godoc.org/github.com/uynap/batRun
+[Context]: https://godoc.org/golang.org/x/net/context
 
 batRun is a Multitask framework using Producer Consumer pattern to run multiple works in different goroutines. The detail documentation can be found at [GoDoc](http://godoc.org/github.com/uynap/batRun).
 
@@ -27,9 +28,11 @@ batRun is a Multitask framework using Producer Consumer pattern to run multiple 
 
 ## Features
 **Support Multiple-producer and Multiple-work chain**
+
 As the graph shows above, batRun supports multiple producers to generate task.
 
 **Multiple workers for each work**
+
 You can set the quantity of workers for each work.
 
 **Support timeout for each task**
@@ -38,7 +41,7 @@ You can set the quantity of workers for each work.
 
 ## Usage
 
-Basically, you only need to create at least one "producer"(func produce(task *batRun.Task)) and one "worker"(func worker(ctx *batRun.Context) error).
+Basically, you only need to create at least one "producer"(`func produce(task *batRun.Task)`) and one "worker"(`func worker(ctx *batRun.Context) error`).
 
 A quick example is:
 
@@ -82,7 +85,7 @@ func worker2(ctx *batRun.Context) error {
 
 Installation
 ------------
-The only dependence is golang.org/x/net/context.
+The only dependence is [golang.org/x/net/context][Context].
 According to the Go1.7's roadmap, golang.org/x/net/context will be included into Golang's core. Then there's no dependence anymore.
 
 `$ go get github.com/uynap/batRun`
