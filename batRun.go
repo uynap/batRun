@@ -71,31 +71,12 @@ const (
 	contextCancel
 )
 
-// Task is for "producer" to create contexts
-type Task struct {
-	TaskQueue chan context.Context
-	Total     int
-}
-
-// Context is a wraper of context.Context and is used for handling
-// data through out the task.
-type Context struct {
-	ctx    context.Context
-	Cancel func()
-}
-
 // Report is the report for the whole task life circle.
 type Report struct {
 	Start time.Time
 	End   time.Time
 	// The result for all task.
 	Result map[int]int
-}
-
-// Bat is a single assignment, consisting producer(s) and work(s).
-type Bat struct {
-	Producers []Producer
-	Works     []Workers
 }
 
 // Producer is a function that can be used for generating tasks for workers.
@@ -119,6 +100,12 @@ type Error struct {
 // NewBat returns an empty Bat struct.
 func NewBat() *Bat {
 	return &Bat{}
+}
+
+// Bat is a single assignment, consisting producer(s) and work(s).
+type Bat struct {
+	Producers []Producer
+	Works     []Workers
 }
 
 // AddProducers is a function for users to add producers. Multiple producers are supported.
@@ -263,6 +250,12 @@ func (bat *Bat) runProducers(ctx context.Context) <-chan context.Context {
 	return out
 }
 
+// Task is for "producer" to create contexts
+type Task struct {
+	TaskQueue chan context.Context
+	Total     int
+}
+
 // Submit is a function used within a producer to send a task to workers
 func (task *Task) Submit(ctx context.Context, timeout time.Duration) {
 	if timeout != 0 {
@@ -275,6 +268,13 @@ func (task *Task) Submit(ctx context.Context, timeout time.Duration) {
 // NewContext is a function used within a producer to create a new context.
 func (task *Task) NewContext(data interface{}) context.Context {
 	return context.WithValue(context.Background(), contextData, data)
+}
+
+// Context is a wraper of context.Context and is used for handling
+// data through out the task.
+type Context struct {
+	ctx    context.Context
+	Cancel func()
 }
 
 // GetContext is a function used in both producer and worker with type assertion.

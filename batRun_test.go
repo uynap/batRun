@@ -42,7 +42,7 @@ func TestBatRunWithoutTimeout(t *testing.T) {
 
 	bat.AddWork(func(ctx *batRun.Context) error {
 		data := ctx.GetContext().(map[string]int)
-		if data["age"] != 22 || data["money"] != 600 {
+		if data["age"] != 22 || data["height"] != 182 {
 			t.Error("context error")
 		}
 		ctx.SetContext(data)

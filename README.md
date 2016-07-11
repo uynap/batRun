@@ -27,13 +27,9 @@ batRun is a Multitask framework using Producer Consumer pattern to run multiple 
 * Worker: A group of workers are working together for one work. Each worker is run in a goroutine.
 
 ## Features
-**Support Multiple-producer and Multiple-work chain**
+**Support Multiple-producer and Multiple-work chain**: As the graph shows above, batRun supports multiple producers to generate task.
 
-As the graph shows above, batRun supports multiple producers to generate task.
-
-**Multiple workers for each work**
-
-You can set the quantity of workers for each work.
+**Multiple workers for each work**: You can set the quantity of workers for each work.
 
 **Support timeout for each task**
 
