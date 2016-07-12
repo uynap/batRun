@@ -1,9 +1,12 @@
-# batRun [![Build Status]][Build] [![GoDoc]][Documentation]
+# batRun [![Build Status]][Build] [![GoDoc]][Documentation] [![Report Status]][Report]
 
-[Build Status]: https://img.shields.io/travis/uynap/batRun.svg
+[Build Status]: https://img.shields.io/travis/uynap/batRun.svg?style=flat-square
 [Build]: https://travis-ci.org/uynap/batRun
-[GoDoc]: https://img.shields.io/badge/documentation-reference-5272B4.svg
+[GoDoc]: https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square
 [Documentation]: http://godoc.org/github.com/uynap/batRun
+[Report Status]: https://img.shields.io/badge/go_report-A+-brightgreen.svg?style=flat-square
+[Report]: https://goreportcard.com/report/github.com/uynap/batRun
+
 [Context]: https://godoc.org/golang.org/x/net/context
 
 batRun is a Multitask framework using Producer Consumer pattern to run multiple works in different goroutines. The detail documentation can be found at [GoDoc](http://godoc.org/github.com/uynap/batRun).
