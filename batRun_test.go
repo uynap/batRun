@@ -1,6 +1,7 @@
 package batRun_test
 
 import (
+	"errors"
 	"github.com/uynap/batRun"
 	"testing"
 	"time"
@@ -125,6 +126,37 @@ func TestBatRunWithTimeoutCancel(t *testing.T) {
 		data["height"] = 182
 		ctx.SetContext(data)
 		time.Sleep(3 * time.Second)
+		return nil
+	}, 5)
+
+	bat.Run()
+}
+
+func TestBatRunWithCancel(t *testing.T) {
+	bat := batRun.NewBat()
+	bat.AddProducers(func(task *batRun.Task) {
+		ctx := task.NewContext(map[string]int{})
+		task.Submit(ctx, 0)
+	})
+
+	bat.AddWork(func(ctx *batRun.Context) error {
+		ctx.Cancel = func() {
+			println("Cancel is called from work 1")
+		}
+		return nil
+	}, 5)
+
+	bat.AddWork(func(ctx *batRun.Context) error {
+		ctx.Cancel = func() {
+			println("Cancel is called from work 2")
+		}
+		return errors.New("with some errors")
+	}, 5)
+
+	bat.AddWork(func(ctx *batRun.Context) error {
+		ctx.Cancel = func() {
+			println("Cancel is called from work 3")
+		}
 		return nil
 	}, 5)
 

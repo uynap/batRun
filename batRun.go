@@ -186,15 +186,10 @@ func (bat *Bat) runWorker(ctx context.Context, worker Worker, upstream <-chan co
 				go func() { _c <- worker(_ctx) }()
 
 				select {
+				// Timeout or cancelled by upstream
 				case <-c.Done():
 					// Call previous cancel functions if any
-					if cancels, ok := c.Value(contextCancel).([]func()); ok {
-						if len(cancels) != 0 {
-							for _, cancel := range cancels {
-								cancel()
-							}
-						}
-					}
+					callCancel(c)
 
 					// Call current cancel function
 					if _ctx.Cancel != nil {
@@ -203,15 +198,16 @@ func (bat *Bat) runWorker(ctx context.Context, worker Worker, upstream <-chan co
 
 					return
 				case err := <-_c:
-					if err != nil {
-						_err := &Error{err, 0}
-						c = context.WithValue(_ctx.ctx, contextError, _err)
-					}
-
 					if _ctx.Cancel != nil {
 						cancels, _ := c.Value(contextCancel).([]func())
 						cancels = append(cancels, _ctx.Cancel)
 						c = context.WithValue(_ctx.ctx, contextCancel, cancels)
+					}
+
+					if err != nil {
+						_err := &Error{err, 0}
+						c = context.WithValue(c, contextError, _err)
+						callCancel(c)
 					}
 				}
 			}
@@ -224,6 +220,16 @@ func (bat *Bat) runWorker(ctx context.Context, worker Worker, upstream <-chan co
 		}
 	}()
 	return out
+}
+
+func callCancel(c context.Context) {
+	if cancels, ok := c.Value(contextCancel).([]func()); ok {
+		if len(cancels) != 0 {
+			for _, cancel := range cancels {
+				cancel()
+			}
+		}
+	}
 }
 
 func (bat *Bat) runProducers(ctx context.Context) <-chan context.Context {
